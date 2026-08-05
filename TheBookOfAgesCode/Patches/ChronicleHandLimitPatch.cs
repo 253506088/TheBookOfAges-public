@@ -57,20 +57,21 @@ public static class ChronicleHandLimitAddPatch
                 typeof(CardPilePosition),
                 typeof(AbstractModel),
                 typeof(bool),
+                typeof(bool),
             ]);
     }
 
     /// <summary>
     /// 只有目标卡堆是手牌且 GM 上限不是 10 时才接管，其它卡堆保持原逻辑。
     /// </summary>
-    public static bool Prefix(IEnumerable<CardModel> cards, CardPile newPile, CardPilePosition position, AbstractModel? clonedBy, bool skipVisuals, ref Task<IReadOnlyList<CardPileAddResult>> __result)
+    public static bool Prefix(IEnumerable<CardModel> cards, CardPile newPile, CardPilePosition position, AbstractModel? clonedBy, bool skipVisuals, bool isChangingOwners, ref Task<IReadOnlyList<CardPileAddResult>> __result)
     {
         if (GmRunContextService.IsMultiplayer() || newPile.Type != PileType.Hand || ChronicleService.GetEffectiveHandLimit() == CardPile.MaxCardsInHand)
         {
             return true;
         }
 
-        __result = ChronicleService.AddCardsToHandWithHandLimitAsync(cards, newPile, position, clonedBy, skipVisuals);
+        __result = ChronicleService.AddCardsToHandWithHandLimitAsync(cards, newPile, position, clonedBy, skipVisuals, isChangingOwners);
         return false;
     }
 }
@@ -321,7 +322,7 @@ public static class ChronicleHandLimitPillagePatch
     private static async Task PlayWithHandLimitAsync(Pillage card, PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         ArgumentNullException.ThrowIfNull(cardPlay.Target, nameof(cardPlay.Target));
-        await DamageCmd.Attack(card.DynamicVars.Damage.BaseValue).FromCard(card).Targeting(cardPlay.Target)
+        await DamageCmd.Attack(card.DynamicVars.Damage.BaseValue).FromCard(card, cardPlay).Targeting(cardPlay.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(choiceContext);
 

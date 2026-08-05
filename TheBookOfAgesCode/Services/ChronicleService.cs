@@ -2587,7 +2587,7 @@ public sealed class ChronicleService
             }
 
             result.Add(card);
-            await AddCardsToHandWithHandLimitAsync([card], hand, CardPilePosition.Bottom, null, skipVisuals: false);
+            await AddCardsToHandWithHandLimitAsync([card], hand, CardPilePosition.Bottom, null, skipVisuals: false, isChangingOwners: false);
             CombatManager.Instance.History.CardDrawn(combatState, card, fromHandDraw);
             await Hook.AfterCardDrawn(combatState, choiceContext, card, fromHandDraw);
             card.InvokeDrawn();
@@ -2606,7 +2606,8 @@ public sealed class ChronicleService
         CardPile newPile,
         CardPilePosition position,
         AbstractModel? source,
-        bool skipVisuals)
+        bool skipVisuals,
+        bool isChangingOwners)
     {
         List<CardModel> cardList = cards.ToList();
         if (cardList.Count == 0)
@@ -2616,7 +2617,7 @@ public sealed class ChronicleService
 
         if (newPile.Type != PileType.Hand)
         {
-            return await CardPileCmd.Add(cardList, newPile, position, source, skipVisuals);
+            return await CardPileCmd.Add(cardList, newPile, position, source, skipVisuals, isChangingOwners);
         }
 
         if (newPile.IsCombatPile && CombatManager.Instance.IsEnding)
@@ -2626,6 +2627,7 @@ public sealed class ChronicleService
                 success = false,
                 cardAdded = card,
                 oldPile = card.Pile,
+                targetPile = newPile.Type,
                 modifyingModels = null,
             }).ToList();
         }
@@ -2643,6 +2645,7 @@ public sealed class ChronicleService
                     success = false,
                     cardAdded = card,
                     oldPile = oldPile,
+                    targetPile = newPile.Type,
                     modifyingModels = null,
                 });
                 continue;
@@ -2656,6 +2659,7 @@ public sealed class ChronicleService
                 success = true,
                 cardAdded = card,
                 oldPile = oldPile,
+                targetPile = newPile.Type,
                 modifyingModels = null,
             };
             results.Add(result);
@@ -2673,7 +2677,7 @@ public sealed class ChronicleService
                 _ => throw new ArgumentOutOfRangeException(nameof(position), position, null),
             });
 
-            if (oldPile == null && targetPile.IsCombatPile && card.CombatState != null)
+            if (oldPile == null && targetPile.IsCombatPile && card.CombatState != null && !isChangingOwners)
             {
                 await Hook.AfterCardEnteredCombat(card.CombatState, card);
             }
