@@ -1,0 +1,23 @@
+{
+    "THEBOOKOFAGES.mod_title": "The Book of Ages GM Console",
+    "THEBOOKOFAGES-CHRONICLE_MOD_SECTION.title": "The Book of Ages Mod Settings",
+    "THEBOOKOFAGES-ENABLE_LOG.title": "Enable GM console logs",
+    "THEBOOKOFAGES-ENABLE_LOG.hover.title": "Only affects this mod",
+    "THEBOOKOFAGES-ENABLE_LOG.hover.desc": "Controls logging for The Book of Ages GM Console only. It does not change BaseLib logs or any other mod logs.",
+    "THEBOOKOFAGES-ENABLE_CARD_PREHEAT.title": "Enable card self-service preheat",
+    "THEBOOKOFAGES-ENABLE_CARD_PREHEAT.hover.title": "Only affects this mod",
+    "THEBOOKOFAGES-ENABLE_CARD_PREHEAT.hover.desc": "Controls only the card self-service preheat behavior of The Book of Ages GM Console. It does not affect other mods.",
+    "THEBOOKOFAGES-PREVENT_DUPLICATE_RELIC_GRANT.title": "Prevent duplicate relic grants",
+    "THEBOOKOFAGES-PREVENT_DUPLICATE_RELIC_GRANT.hover.title": "Keeps the old behavior when enabled",
+    "THEBOOKOFAGES-PREVENT_DUPLICATE_RELIC_GRANT.hover.desc": "When disabled, relic self-service can grant duplicate copies of the same relic. When enabled, already-owned relics are greyed out and skipped.",
+    "THEBOOKOFAGES-DIAGNOSTIC_SECTION.title": "Diagnostic Export",
+    "THEBOOKOFAGES-ENABLE_DIAGNOSTIC_EXPORT.title": "Auto-export mod diagnostic packages",
+    "THEBOOKOFAGES-ENABLE_DIAGNOSTIC_EXPORT.hover.title": "Enabled by default on PC, disabled on mobile",
+    "THEBOOKOFAGES-ENABLE_DIAGNOSTIC_EXPORT.hover.desc": "When a log at the configured level, a crash clue, multiplayer desync, or mod loading failure is detected, a diagnostic zip is created. PC builds enable this by default and prefer the desktop diagnostic folder. Mobile builds disable it by default; players can turn it on here, and reports are written under the game user data folder. The file stays on this device and is not uploaded automatically.",
+    "THEBOOKOFAGES-DIAGNOSTIC_EXPORT_MINIMUM_LEVEL.title": "Diagnostic export trigger level",
+    "THEBOOKOFAGES-DIAGNOSTIC_EXPORT_MINIMUM_LEVEL.hover.title": "Default: Error",
+    "THEBOOKOFAGES-DIAGNOSTIC_EXPORT_MINIMUM_LEVEL.hover.desc": "Only logs at or above this level create diagnostic packages. Default is Error; choosing Warn allows both Warn and Error.",
+    "THEBOOKOFAGES-GM_DIAGNOSTIC_EXPORT_LOG_LEVEL-INFO.title": "Info",
+    "THEBOOKOFAGES-GM_DIAGNOSTIC_EXPORT_LOG_LEVEL-WARN.title": "Warn",
+    "THEBOOKOFAGES-GM_DIAGNOSTIC_EXPORT_LOG_LEVEL-ERROR.title": "Error"
+}

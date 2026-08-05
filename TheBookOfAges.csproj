@@ -1,0 +1,131 @@
+<Project Sdk="Godot.NET.Sdk/4.5.1" InitialTargets="CheckDependencyPaths">
+    <Import Project=".\Sts2PathDiscovery.props"/>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <AssemblyName>TheBookOfAges</AssemblyName>
+        <ImplicitUsings>true</ImplicitUsings>
+        <Nullable>enable</Nullable> <!--Makes code analysis regarding null values stricter.-->
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <DefaultItemExcludes>packages/**</DefaultItemExcludes>
+        <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
+        <PathMap>$(AppOutputBase)=.\</PathMap>
+        <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>
+        <HasPck>true</HasPck>
+        <GmButtonIconPath>$(MSBuildProjectDirectory)/图片素材/gm按钮.png</GmButtonIconPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Diasble architecture mismatch warning; mods are ideally built for all platforms (MSIL)
+             while your local StS2 version will be for your specific platform. -->
+        <NoWarn>$(NoWarn);MSB3270</NoWarn>
+        <!-- 关掉 Alchyr.Sts2.ModAnalyzers 的 STS002：分析器要求把 .json 本地化资源加进
+             AdditionalFiles，但本 mod 走代码内的 GmUiText 三元国际化，根本没有 .json 本地化文件，
+             空 glob 永远会让分析器报这条警告，明确不用即可。 -->
+        <NoWarn>$(NoWarn);STS002</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup Condition="Exists('$(Sts2DataDir)')" >
+        <Reference Include="0Harmony">
+            <HintPath>$(Sts2DataDir)/0Harmony.dll</HintPath>
+            <Private>true</Private>
+        </Reference>
+        <Reference Include="sts2">
+            <HintPath>$(Sts2DataDir)/sts2.dll</HintPath>
+            <Private>true</Private>
+        </Reference>
+    </ItemGroup>
+    
+    <ItemGroup Condition="'$(PublicizeSts)' == 'true'"> <!--Allows access to originally private/protected members but may (unlikely to) cause errors.-->
+        <Publicize Include="sts2" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Alchyr.Sts2.BaseLib" Version="3.1.3" PrivateAssets="All"/>
+        <PackageReference Include="Krafs.Publicizer" Version="2.3.0" PrivateAssets="All"/>
+        <PackageReference Include="Alchyr.Sts2.ModAnalyzers" Version="*" />
+        <!-- Generates a .pck file when building if only using simple assets. May not work on all setups. Uncomment to test. -->
+        <!-- <PackageReference Include="BSchneppe.StS2.PckPacker" Version="0.1.1" PrivateAssets="All" /> -->
+        <AdditionalFiles Include="TheBookOfAges/localization/**/*.json"/> <!-- Used by analyzer -->
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="TheBookOfAges/**" />
+        <Compile Remove="materials/**" />
+        <Compile Remove="shaders/**" />
+        <Compile Remove="images/**" />
+        <EmbeddedResource Remove="TheBookOfAges/**" />
+        <EmbeddedResource Remove="materials/**" />
+        <EmbeddedResource Remove="shaders/**" />
+        <EmbeddedResource Remove="images/**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Condition="Exists('Directory.Build.props')" Include="Directory.Build.props"/>
+        <None Include=".gitignore" />
+        <None Include="TheBookOfAges.json" />
+        <None Include="project.godot"/>
+        <None Include="TheBookOfAges/**" />
+    </ItemGroup>
+    
+    <Target Name="CheckDependencyPaths" >
+        <Error
+                Text=" Slay the Spire 2 data not found at path '$(Sts2DataDir)'"
+                Condition="'$(Sts2DataDir)' == '' or !Exists('$(Sts2DataDir)')" />
+    </Target>
+
+    <Target Name="CopyToModsFolderOnBuild" AfterTargets="PostBuildEvent">
+        <Message Text="Copying .dll and manifest to mods folder." Importance="high" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/" />
+        <Copy SourceFiles="TheBookOfAges.json" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/" />
+        <MakeDir Directories="$(ModsPath)$(MSBuildProjectName)/图片素材/" Condition="Exists('$(GmButtonIconPath)')" />
+        <Copy SourceFiles="$(GmButtonIconPath)" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/图片素材/" Condition="Exists('$(GmButtonIconPath)')" />
+    </Target>
+
+    <Target Name="CopyGmUiImagesToModsFolder" AfterTargets="CopyToModsFolderOnBuild">
+        <ItemGroup>
+            <GmUiImageFiles Include="$(MSBuildProjectDirectory)\图片素材\*.png" />
+        </ItemGroup>
+        <MakeDir Directories="$(ModsPath)$(MSBuildProjectName)/图片素材/" Condition="'@(GmUiImageFiles)' != ''" />
+        <Copy SourceFiles="@(GmUiImageFiles)" DestinationFolder="$(ModsPath)$(MSBuildProjectName)/图片素材/" Condition="'@(GmUiImageFiles)' != ''" />
+    </Target>
+
+    <Target Name="CleanLooseLocalizationFromModsFolder" AfterTargets="CopyToModsFolderOnBuild">
+        <RemoveDir Directories="$(ModsPath)$(MSBuildProjectName)/TheBookOfAges/" />
+    </Target>
+
+    <Target Name="CleanLooseGmUiImagesFromModsFolder" AfterTargets="CopyGmUiImagesToModsFolder;GodotPublish" Condition="'$(HasPck)' == 'true'">
+        <RemoveDir Directories="$(ModsPath)$(MSBuildProjectName)/图片素材/" />
+    </Target>
+
+    <Target Name="CopyQuickPck" AfterTargets="PackPck" Condition="Exists('$(PckPackerOutputPath)') And '$(PckPackerSkipped)' != 'true'">
+        <Message Text="Copying quick .pck to mods folder." Importance="high"/>
+        <Copy SourceFiles="$(PckPackerOutputPath)"
+              DestinationFolder="$(ModsPath)/$(MSBuildProjectName)" />
+    </Target>
+
+    <Target Name="NeedGodotForPublish" BeforeTargets="Publish">
+        <Error Text=" Godot path must be set up before publishing; Godot not found at path '$(GodotPath)'. Check Directory.Build.props file."
+               Condition="'$(HasPck)' == 'true' and ('$(GodotPath)' == '' or !Exists('$(GodotPath)'))"/>
+    </Target>
+    
+    <ItemGroup>
+        <GodotResourceFiles Include="TheBookOfAges/**"/>
+    </ItemGroup>
+
+    <Target Name="PrepareGodotExportDependencies" BeforeTargets="GodotPublish" Condition="'$(HasPck)' == 'true' and Exists('$(Sts2DataDir)')">
+        <ItemGroup>
+            <GodotExportDependency Include="$(Sts2DataDir)/sts2.dll" Condition="Exists('$(Sts2DataDir)/sts2.dll')" />
+            <GodotExportDependency Include="$(Sts2DataDir)/0Harmony.dll" Condition="Exists('$(Sts2DataDir)/0Harmony.dll')" />
+        </ItemGroup>
+        <Copy SourceFiles="@(GodotExportDependency)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="'@(GodotExportDependency)' != ''" />
+        <Copy SourceFiles="@(GodotExportDependency)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" Condition="'@(GodotExportDependency)' != '' and '$(PublishDir)' != ''" />
+    </Target>
+
+    <Target Name="GodotPublish" AfterTargets="Publish" Condition="'$(HasPck)' == 'true' and '$(GodotPath)' != '' and Exists('$(GodotPath)') and '$(IsInnerGodotExport)' != 'true'" Inputs="@(GodotResourceFiles)" Outputs="$(ModsPath)$(MSBuildProjectName)/$(MSBuildProjectName).pck">
+        <Message Text="Exporting Godot .pck to mods folder" Importance="high"/>
+        <Exec Command="&quot;$(GodotPath)&quot; --headless --export-pack &quot;BasicExport&quot; &quot;$(ModsPath)$(MSBuildProjectName)/$(MSBuildProjectName).pck&quot;"
+              EnvironmentVariables="IsInnerGodotExport=true;MSBUILDDISABLENODEREUSE=1"
+              ContinueOnError="WarnAndContinue"/>
+    </Target>
+</Project>
+

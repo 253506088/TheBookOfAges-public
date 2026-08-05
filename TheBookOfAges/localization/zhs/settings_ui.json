@@ -1,0 +1,23 @@
+{
+    "THEBOOKOFAGES.mod_title": "岁月史书 GM 控制台",
+    "THEBOOKOFAGES-CHRONICLE_MOD_SECTION.title": "岁月史书 Mod 设置",
+    "THEBOOKOFAGES-ENABLE_LOG.title": "输出岁月史书 GM 日志",
+    "THEBOOKOFAGES-ENABLE_LOG.hover.title": "只影响本 Mod",
+    "THEBOOKOFAGES-ENABLE_LOG.hover.desc": "只控制岁月史书 GM 控制台自己的日志输出，不影响 BaseLib，也不影响其他 Mod。",
+    "THEBOOKOFAGES-ENABLE_CARD_PREHEAT.title": "启用岁月史书卡片自助预热",
+    "THEBOOKOFAGES-ENABLE_CARD_PREHEAT.hover.title": "只影响本 Mod",
+    "THEBOOKOFAGES-ENABLE_CARD_PREHEAT.hover.desc": "只控制岁月史书 GM 控制台的卡片自助预热行为，不影响其他 Mod。",
+    "THEBOOKOFAGES-PREVENT_DUPLICATE_RELIC_GRANT.title": "禁止重复发放遗物",
+    "THEBOOKOFAGES-PREVENT_DUPLICATE_RELIC_GRANT.hover.title": "开启后保持旧逻辑",
+    "THEBOOKOFAGES-PREVENT_DUPLICATE_RELIC_GRANT.hover.desc": "关闭时，遗物自助允许重复发放同名遗物；开启时，已经持有的遗物会置灰并在发放时跳过。",
+    "THEBOOKOFAGES-DIAGNOSTIC_SECTION.title": "异常诊断导出",
+    "THEBOOKOFAGES-ENABLE_DIAGNOSTIC_EXPORT.title": "自动导出 Mod 异常诊断包",
+    "THEBOOKOFAGES-ENABLE_DIAGNOSTIC_EXPORT.hover.title": "PC 默认开启，移动端默认关闭",
+    "THEBOOKOFAGES-ENABLE_DIAGNOSTIC_EXPORT.hover.desc": "检测到达到配置等级的日志、闪退痕迹、联机不同步或 Mod 加载异常时生成诊断压缩包。PC 端默认开启并优先写入桌面诊断文件夹；移动端默认关闭，需要玩家在这里手动开启，开启后写入游戏用户数据目录。只保存在本机，不会自动上传。",
+    "THEBOOKOFAGES-DIAGNOSTIC_EXPORT_MINIMUM_LEVEL.title": "自动导出触发等级",
+    "THEBOOKOFAGES-DIAGNOSTIC_EXPORT_MINIMUM_LEVEL.hover.title": "默认 Error",
+    "THEBOOKOFAGES-DIAGNOSTIC_EXPORT_MINIMUM_LEVEL.hover.desc": "只有达到该等级及以上的日志才会自动生成诊断压缩包。默认 Error；如果改成 Warn，Warn 和 Error 都会触发。",
+    "THEBOOKOFAGES-GM_DIAGNOSTIC_EXPORT_LOG_LEVEL-INFO.title": "Info",
+    "THEBOOKOFAGES-GM_DIAGNOSTIC_EXPORT_LOG_LEVEL-WARN.title": "Warn",
+    "THEBOOKOFAGES-GM_DIAGNOSTIC_EXPORT_LOG_LEVEL-ERROR.title": "Error"
+}
