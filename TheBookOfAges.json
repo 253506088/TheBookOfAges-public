@@ -3,10 +3,10 @@
   "name": "岁月史书 TheBookOfAges / GM Console",
   "author": "TheBookOfAges",
   "description": "杀戮尖塔 2 GM 管理页面，提供运行内调试和管理功能，支持联机修改（岁月史书页签下的内容暂时不支持）QQ交流群： 598295851 \n\n Slay the Spire 2 GM Management Page, providing in-game debugging and administrative functions, with support for multiplayer modifications (content under the “Chronicle of Ages” tab is temporarily not supported).",
-  "version": "v1.0.8",
+  "version": "1.0.11",
   "has_pck": true,
   "has_dll": true,
   "min_game_version": "0.107.1",
-  "dependencies": [{"id": "BaseLib", "min_version": "3.3.0"}],
+  "dependencies": [{"id": "BaseLib", "min_version": "3.4.7"}],
   "affects_gameplay": true
 }

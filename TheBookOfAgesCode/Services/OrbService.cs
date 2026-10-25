@@ -411,12 +411,7 @@ public sealed class OrbService
     {
         try
         {
-            Type? baseType = typeof(ModelDb).Assembly.GetType("MegaCrit.Sts2.Core.Models.Orbs.OrbModel");
-            if (baseType == null)
-            {
-                MainFile.Logger.Info("球盒扫描充能球类型失败：未找到 OrbModel 基类。");
-                return [];
-            }
+            Type baseType = typeof(OrbModel);
 
             List<object> orbs = [];
             foreach (Type type in typeof(ModelDb).Assembly.GetTypes()

@@ -22,7 +22,7 @@ namespace TheBookOfAges.TheBookOfAgesCode.Patches;
 public static class ChronicleDamagePatch
 {
     /// <summary>
-    /// 查找所有带 decimal amount 参数的 CreatureCmd.Damage 重载。
+    /// 只修改最终执行伤害的集合重载，避免单目标等转发重载把倍率重复计算。
     /// </summary>
     public static IEnumerable<MethodBase> TargetMethods()
     {
@@ -30,7 +30,9 @@ public static class ChronicleDamagePatch
             .GetMethods(BindingFlags.Public | BindingFlags.Static)
             .Where(method => method.Name == nameof(CreatureCmd.Damage))
             .Where(ChroniclePatchHelper.IsPatchableMethod)
-            .Where(method => method.GetParameters().Any(parameter => parameter.Name == "amount" && parameter.ParameterType == typeof(decimal)));
+            .Where(method => method.GetParameters().Any(parameter => parameter.Name == "amount" && parameter.ParameterType == typeof(decimal)))
+            .Where(method => method.GetParameters().Any(parameter => parameter.Name == "targets" && parameter.ParameterType == typeof(IEnumerable<Creature>)))
+            .Where(method => method.GetParameters().Any(parameter => parameter.Name == "cardSource" && parameter.ParameterType == typeof(CardModel)));
     }
 
     /// <summary>
@@ -38,6 +40,11 @@ public static class ChronicleDamagePatch
     /// </summary>
     public static void Prefix(object[] __args, MethodBase __originalMethod)
     {
+        if (GmRunContextService.IsMultiplayer())
+        {
+            return;
+        }
+
         ParameterInfo[] parameters = __originalMethod.GetParameters();
         int amountIndex = Array.FindIndex(parameters, parameter => parameter.Name == "amount");
         if (amountIndex < 0 || __args[amountIndex] is not decimal amount)
@@ -45,7 +52,7 @@ public static class ChronicleDamagePatch
             return;
         }
 
-        Creature? target = FindCreatureArg(__args, parameters, "target");
+        Creature? target = FindFirstTarget(__args, parameters);
         Creature? dealer = FindCreatureArg(__args, parameters, "dealer");
         __args[amountIndex] = ChronicleService.ScaleDamage(amount, target, dealer);
     }
@@ -57,6 +64,22 @@ public static class ChronicleDamagePatch
     {
         int index = Array.FindIndex(parameters, parameter => parameter.Name == name);
         return index >= 0 ? args[index] as Creature : null;
+    }
+
+    /// <summary>
+    /// 集合重载没有单独的 target 参数；保留无施法者伤害的目标阵营判断，并避免重复枚举一次性序列。
+    /// </summary>
+    private static Creature? FindFirstTarget(object[] args, ParameterInfo[] parameters)
+    {
+        int index = Array.FindIndex(parameters, parameter => parameter.Name == "targets");
+        if (index < 0 || args[index] is not IEnumerable<Creature> targets)
+        {
+            return null;
+        }
+
+        IReadOnlyList<Creature> targetList = targets as IReadOnlyList<Creature> ?? targets.ToList();
+        args[index] = targetList;
+        return targetList.FirstOrDefault();
     }
 }
 

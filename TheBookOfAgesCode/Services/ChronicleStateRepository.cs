@@ -104,9 +104,9 @@ public static class ChronicleStateRepository
             }
 
             ChronicleSavedState? state = JsonSerializer.Deserialize<ChronicleSavedState>(jsonText, JsonOptions);
-            if (state == null)
+            if (state == null || state.Version != ChronicleSavedState.CurrentVersion || state.LockedValues == null)
             {
-                MainFile.Logger.Info($"岁月史书持久化加载跳过：反序列化结果为空，路径={filePath}。");
+                MainFile.Logger.Info($"岁月史书持久化加载跳过：配置为空、版本不支持或锁定字典损坏，路径={filePath}，版本={state?.Version.ToString() ?? "空"}。");
                 return null;
             }
 
@@ -141,18 +141,8 @@ public static class ChronicleStateRepository
                 return false;
             }
 
-            // 目标文件已存在时 RenameAbsolute 可能因平台行为不一致而失败；先删旧文件再 rename 最稳。
-            if (Godot.FileAccess.FileExists(filePath))
-            {
-                Godot.DirAccess.RemoveAbsolute(filePath);
-            }
-
-            Godot.Error renameError = Godot.DirAccess.RenameAbsolute(tempPath, filePath);
-            if (renameError != Godot.Error.Ok)
-            {
-                MainFile.Logger.Info($"岁月史书持久化保存失败：临时文件改名失败，error={renameError}，临时={tempPath}，目标={filePath}。");
-                return false;
-            }
+            // 同目录覆盖替换，不先删旧文件；替换失败时保留最后一份有效配置。
+            File.Move(ProjectSettings.GlobalizePath(tempPath), ProjectSettings.GlobalizePath(filePath), overwrite: true);
 
             return true;
         }

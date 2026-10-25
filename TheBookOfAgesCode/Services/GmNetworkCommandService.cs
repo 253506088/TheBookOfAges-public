@@ -19,7 +19,7 @@ public static class GmNetworkCommandService
     /// <param name="actionName">用于日志展示的动作名称。</param>
     public static Task<bool> TryEnqueueConsoleCommandAsync(Player player, string command, string actionName)
     {
-        if (!GmRunContextService.IsMultiplayer())
+        if (player == null || string.IsNullOrWhiteSpace(command) || !GmRunContextService.IsMultiplayer())
         {
             return Task.FromResult(false);
         }
@@ -30,6 +30,12 @@ public static class GmNetworkCommandService
             if (manager?.ActionQueueSynchronizer == null)
             {
                 MainFile.Logger.Info($"GM 多人命令提交失败：动作={actionName}，网络模式={GmRunContextService.GetNetworkModeText()}，玩家NetId={player.NetId}，命令={command}，原因=ActionQueueSynchronizer 为空。");
+                return Task.FromResult(false);
+            }
+
+            if (!CanSubmit(manager, player.NetId, actionName) || !ReferenceEquals(player, GmRunContextService.GetCurrentPlayer()))
+            {
+                MainFile.Logger.Info($"GM 多人命令已拒绝：动作={actionName}，原因=提交上下文不可用或玩家对象已失效。");
                 return Task.FromResult(false);
             }
 
@@ -54,7 +60,7 @@ public static class GmNetworkCommandService
     /// <param name="actionName">用于日志展示的动作名称。</param>
     public static Task<bool> TryEnqueueGameActionAsync(GameAction action, string actionName)
     {
-        if (!GmRunContextService.IsMultiplayer())
+        if (action == null || !GmRunContextService.IsMultiplayer())
         {
             return Task.FromResult(false);
         }
@@ -65,6 +71,11 @@ public static class GmNetworkCommandService
             if (manager?.ActionQueueSynchronizer == null)
             {
                 MainFile.Logger.Info($"GM 多人动作提交失败：动作={actionName}，网络模式={GmRunContextService.GetNetworkModeText()}，玩家NetId={action.OwnerId}，GameActionType={action.GetType().Name}，ActionType={action.ActionType}，原因=ActionQueueSynchronizer 为空。");
+                return Task.FromResult(false);
+            }
+
+            if (!CanSubmit(manager, action.OwnerId, actionName))
+            {
                 return Task.FromResult(false);
             }
 
@@ -80,6 +91,22 @@ public static class GmNetworkCommandService
             MainFile.Logger.Info($"GM 多人动作提交异常：动作={actionName}，网络模式={GmRunContextService.GetNetworkModeText()}，玩家NetId={action.OwnerId}，GameActionType={action.GetType().Name}，ActionType={action.ActionType}，异常={ex.Message}。");
             return Task.FromResult(false);
         }
+    }
+
+    /// <summary>
+    /// 在最终提交入口核对本机归属、连接和加载状态，防止绕过 UI 闸门后提交失效请求。
+    /// </summary>
+    private static bool CanSubmit(RunManager manager, ulong ownerId, string actionName)
+    {
+        Player? localPlayer = GmRunContextService.GetCurrentPlayer();
+        if (localPlayer == null || localPlayer.NetId != ownerId ||
+            manager.NetService is not { IsConnected: true, IsGameLoading: false })
+        {
+            MainFile.Logger.Info($"GM 多人提交已拒绝：动作={actionName}，请求玩家={ownerId}，本机玩家={localPlayer?.NetId.ToString() ?? "空"}，原因=玩家归属不符、未连接或正在加载。");
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>

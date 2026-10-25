@@ -105,6 +105,11 @@ public static class GmRunContextService
             return GmFeatureAvailability.Deny(GmUiText.MultiplayerLocalPlayerMissing);
         }
 
+        if (IsNetworkLoading())
+        {
+            return GmFeatureAvailability.Deny(GmUiText.MultiplayerNetworkLoadingDisabled);
+        }
+
         return feature switch
         {
             GmFeature.GrantCard => GetDeckCardMutationAvailability(allowCombat: true, inCombatReason: string.Empty, executionMode: GmFeatureExecutionMode.NetworkGameAction),

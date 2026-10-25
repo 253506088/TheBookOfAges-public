@@ -24,7 +24,10 @@ public sealed class ChronicleSavedState
     /// <summary>
     /// 当前 DTO schema 版本号，后续字段变更时升级；老存档读到不同版本时按默认值兜底。
     /// </summary>
-    public int Version { get; set; } = 1;
+    public const int CurrentVersion = 1;
+
+    /// <summary>此份配置的结构版本，读取时必须与当前支持的版本一致。</summary>
+    public int Version { get; set; } = CurrentVersion;
 
     /// <summary>
     /// 数值锁定字典；key 使用 ChronicleValueKey 枚举名字符串，新增枚举不破坏老存档。
