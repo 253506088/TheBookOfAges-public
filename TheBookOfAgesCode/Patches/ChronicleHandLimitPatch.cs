@@ -17,6 +17,44 @@ using TheBookOfAges.TheBookOfAgesCode.Services;
 namespace TheBookOfAges.TheBookOfAgesCode.Patches;
 
 /// <summary>
+/// 当前游戏的手牌上限为原生属性；统一修改入口，让抽牌、发牌及卡牌效果沿用游戏完整流程。
+/// 原有抽牌补丁会因有效上限与原生上限相等而自动放行，不再覆盖新版的触发器和战斗结束检查。
+/// </summary>
+[HarmonyPatch(typeof(CardPile), nameof(CardPile.MaxCardsInHand), MethodType.Getter)]
+public static class ChronicleNativeHandLimitPatch
+{
+    /// <summary>
+    /// 单人局使用玩家设置；多人局和默认设置保留游戏及其他 Mod 的原始结果。
+    /// </summary>
+    public static void Postfix(ref int __result)
+    {
+        if (!GmRunContextService.IsMultiplayer() && ChronicleService.HandLimitOverride != 10)
+        {
+            __result = Math.Max(1, ChronicleService.HandLimitOverride);
+        }
+    }
+}
+
+/// <summary>
+/// BaseLib 先于本 Mod 安装补丁时，游戏的常量属性可能已经被内联为 10；在其公共上限入口同步设置基数。
+/// 保留 BaseLib 后续的其他 Mod 上限修正，避免仅修改属性却仍只能拿十张牌。
+/// </summary>
+[HarmonyPatch(typeof(BaseLib.Patches.Hooks.MaxHandSizePatch), nameof(BaseLib.Patches.Hooks.MaxHandSizePatch.GetMaxHandSize), typeof(Player), typeof(int))]
+public static class ChronicleBaseLibHandLimitPatch
+{
+    /// <summary>
+    /// 仅在有效单人玩家主动修改上限时调整基数，多人和默认设置完全放行。
+    /// </summary>
+    public static void Prefix(Player player, ref int baseLimit)
+    {
+        if (player != null && !GmRunContextService.IsMultiplayer() && ChronicleService.HandLimitOverride != 10)
+        {
+            baseLimit = Math.Max(1, ChronicleService.HandLimitOverride);
+        }
+    }
+}
+
+/// <summary>
 /// 岁月史书手牌上限抽牌补丁：把游戏抽牌核心逻辑的硬编码 10 替换为 GM 手牌上限。
 /// </summary>
 [HarmonyPatch(typeof(CardPileCmd), nameof(CardPileCmd.Draw), typeof(PlayerChoiceContext), typeof(decimal), typeof(Player), typeof(bool))]
@@ -159,6 +197,9 @@ public static class ChronicleHandLimitCardConsolePatch
 /// </summary>
 internal static class ChronicleHandLayoutCalculator
 {
+    // 原生布局数组仅覆盖 10 张牌，不能拿已被修改的手牌容量作为数组安全边界。
+    public const int NativeLayoutLimit = 10;
+
     /// <summary>
     /// 动态计算 11 张以上手牌的位置；数量越多，横向间距越紧。
     /// </summary>
@@ -205,7 +246,7 @@ public static class ChronicleHandPositionPatch
     /// </summary>
     public static bool Prefix(int handSize, int cardIndex, ref Vector2 __result)
     {
-        if (GmRunContextService.IsMultiplayer() || handSize <= CardPile.MaxCardsInHand)
+        if (GmRunContextService.IsMultiplayer() || handSize <= ChronicleHandLayoutCalculator.NativeLayoutLimit)
         {
             return true;
         }
@@ -226,7 +267,7 @@ public static class ChronicleHandAnglePatch
     /// </summary>
     public static bool Prefix(int handSize, int cardIndex, ref float __result)
     {
-        if (GmRunContextService.IsMultiplayer() || handSize <= CardPile.MaxCardsInHand)
+        if (GmRunContextService.IsMultiplayer() || handSize <= ChronicleHandLayoutCalculator.NativeLayoutLimit)
         {
             return true;
         }
@@ -247,7 +288,7 @@ public static class ChronicleHandScalePatch
     /// </summary>
     public static bool Prefix(int handSize, ref Vector2 __result)
     {
-        if (GmRunContextService.IsMultiplayer() || handSize <= CardPile.MaxCardsInHand)
+        if (GmRunContextService.IsMultiplayer() || handSize <= ChronicleHandLayoutCalculator.NativeLayoutLimit)
         {
             return true;
         }

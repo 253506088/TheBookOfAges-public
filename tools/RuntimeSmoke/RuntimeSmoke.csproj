@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <AssemblyName>GmCompatSmoke</AssemblyName>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="GodotSharp" HintPath="$(GameDataPath)/GodotSharp.dll" />
+        <Reference Include="sts2" HintPath="$(GameDataPath)/sts2.dll" />
+        <Reference Include="TheBookOfAges" HintPath="$(ModAssemblyPath)" />
+        <Reference Include="BaseLib" HintPath="$(BaseLibPath)/BaseLib.dll" />
+    </ItemGroup>
+</Project>

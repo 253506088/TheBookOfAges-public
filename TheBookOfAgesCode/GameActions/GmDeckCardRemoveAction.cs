@@ -1,3 +1,4 @@
+using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Multiplayer;
 using MegaCrit.Sts2.Core.Entities.Players;
@@ -43,11 +44,10 @@ public sealed class GmDeckCardRemoveAction : GameAction
     /// <summary>
     /// 在本机执行网络动作；按下标倒序删除，避免前面的删除让后续下标前移。
     /// </summary>
-    protected override Task ExecuteAction()
+    protected override async Task ExecuteAction()
     {
-        int removedCount = GmDeckCardRemoveExecutor.RemoveByDeckIndexes(_player, _deckIndexes);
+        int removedCount = await GmDeckCardRemoveExecutor.RemoveByDeckIndexes(_player, _deckIndexes);
         MainFile.Logger.Info($"GM 多人卡片删除网络动作执行完成：玩家NetId={_player.NetId}，战斗中={_inCombat}，请求数量={_deckIndexes.Count}，实际删除={removedCount}。");
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -144,7 +144,7 @@ internal static class GmDeckCardRemoveExecutor
     /// </summary>
     /// <param name="player">要操作的玩家。</param>
     /// <param name="deckIndexes">要删除的牌组下标列表。</param>
-    public static int RemoveByDeckIndexes(Player player, IReadOnlyList<uint> deckIndexes)
+    public static async Task<int> RemoveByDeckIndexes(Player player, IReadOnlyList<uint> deckIndexes)
     {
         if (player?.Deck == null)
         {
@@ -158,16 +158,19 @@ internal static class GmDeckCardRemoveExecutor
             .OrderByDescending(index => index)
             .ToList();
         int removedCount = 0;
+        // 先固定本次选择，原生删牌触发器若改变其他牌的位置也不会误删。
+        Dictionary<uint, CardModel> selectedCards = orderedIndexes
+            .Where(index => index < deck.Cards.Count)
+            .ToDictionary(index => index, index => deck.Cards[(int)index]);
 
         foreach (uint deckIndex in orderedIndexes)
         {
-            if (deckIndex >= deck.Cards.Count)
+            if (!selectedCards.TryGetValue(deckIndex, out CardModel? card))
             {
                 MainFile.Logger.Info($"GM 多人卡片删除跳过越界下标：玩家NetId={player.NetId}，deckIndex={deckIndex}，牌组数量={deck.Cards.Count}。");
                 continue;
             }
 
-            CardModel card = deck.Cards[(int)deckIndex];
             if (card.Pile == null || card.Pile.Type != PileType.Deck || card.Pile != deck)
             {
                 MainFile.Logger.Info($"GM 多人卡片删除跳过非当前牌组卡：玩家NetId={player.NetId}，deckIndex={deckIndex}，card={card.Id}，pile={card.Pile?.Type.ToString() ?? "空"}。");
@@ -176,7 +179,7 @@ internal static class GmDeckCardRemoveExecutor
 
             try
             {
-                card.RemoveFromCurrentPile();
+                await CardPileCmd.RemoveFromDeck(card, showPreview: false);
                 removedCount++;
                 MainFile.Logger.Info($"GM 多人卡片删除成功：玩家NetId={player.NetId}，deckIndex={deckIndex}，card={card.Id}。");
             }

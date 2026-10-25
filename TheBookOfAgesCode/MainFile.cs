@@ -186,9 +186,10 @@ public partial class MainFile : Node
     {
         try
         {
+            // 切换存档或读取失败时也必须清理旧状态，不能只在多人模式下重置。
+            ChronicleService.Instance.ResetToDefaults();
             if (GmRunContextService.IsMultiplayer())
             {
-                ChronicleService.Instance.ResetToDefaults();
                 Logger.Info("岁月史书 RunStarted 处理：检测到多人模式，已重置运行时状态并跳过持久化加载。");
                 return;
             }

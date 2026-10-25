@@ -742,6 +742,13 @@ public sealed class ChronicleService
     /// </summary>
     public void LoadFrom(ChronicleSavedState state)
     {
+        if (state == null || state.Version != ChronicleSavedState.CurrentVersion || state.LockedValues == null)
+        {
+            ResetToDefaults();
+            MainFile.Logger.Info("岁月史书拒绝无效或不支持的配置，已恢复默认状态。");
+            return;
+        }
+
         bool previousSuppress = _isSuppressingSave;
         _isSuppressingSave = true;
         try

@@ -3,10 +3,11 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <AssemblyName>TheBookOfAges</AssemblyName>
+        <Version>1.0.11-beta.0.111.0</Version>
         <ImplicitUsings>true</ImplicitUsings>
         <Nullable>enable</Nullable> <!--Makes code analysis regarding null values stricter.-->
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <DefaultItemExcludes>packages/**</DefaultItemExcludes>
+        <DefaultItemExcludes>$(DefaultItemExcludes);packages/**;artifacts/**;.compat-work/**;tools/**</DefaultItemExcludes>
         <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
         <PathMap>$(AppOutputBase)=.\</PathMap>
         <GodotDisabledSourceGenerators>GodotPluginsInitializer</GodotDisabledSourceGenerators>
@@ -40,9 +41,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Alchyr.Sts2.BaseLib" Version="3.1.3" PrivateAssets="All"/>
+        <PackageReference Include="Alchyr.Sts2.BaseLib" Version="3.4.7" PrivateAssets="All"/>
         <PackageReference Include="Krafs.Publicizer" Version="2.3.0" PrivateAssets="All"/>
-        <PackageReference Include="Alchyr.Sts2.ModAnalyzers" Version="*" />
+        <PackageReference Include="Alchyr.Sts2.ModAnalyzers" Version="0.2.1" PrivateAssets="All" />
         <!-- Generates a .pck file when building if only using simple assets. May not work on all setups. Uncomment to test. -->
         <!-- <PackageReference Include="BSchneppe.StS2.PckPacker" Version="0.1.1" PrivateAssets="All" /> -->
         <AdditionalFiles Include="TheBookOfAges/localization/**/*.json"/> <!-- Used by analyzer -->
@@ -121,11 +122,10 @@
         <Copy SourceFiles="@(GodotExportDependency)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" Condition="'@(GodotExportDependency)' != '' and '$(PublishDir)' != ''" />
     </Target>
 
-    <Target Name="GodotPublish" AfterTargets="Publish" Condition="'$(HasPck)' == 'true' and '$(GodotPath)' != '' and Exists('$(GodotPath)') and '$(IsInnerGodotExport)' != 'true'" Inputs="@(GodotResourceFiles)" Outputs="$(ModsPath)$(MSBuildProjectName)/$(MSBuildProjectName).pck">
+    <Target Name="GodotPublish" AfterTargets="Publish" Condition="'$(HasPck)' == 'true' and '$(GodotPath)' != '' and Exists('$(GodotPath)') and '$(IsInnerGodotExport)' != 'true'">
         <Message Text="Exporting Godot .pck to mods folder" Importance="high"/>
         <Exec Command="&quot;$(GodotPath)&quot; --headless --export-pack &quot;BasicExport&quot; &quot;$(ModsPath)$(MSBuildProjectName)/$(MSBuildProjectName).pck&quot;"
-              EnvironmentVariables="IsInnerGodotExport=true;MSBUILDDISABLENODEREUSE=1"
-              ContinueOnError="WarnAndContinue"/>
+              EnvironmentVariables="IsInnerGodotExport=true;MSBUILDDISABLENODEREUSE=1"/>
+        <Error Text="Godot 未生成资源包，发布失败。" Condition="!Exists('$(ModsPath)$(MSBuildProjectName)/$(MSBuildProjectName).pck')" />
     </Target>
 </Project>
-

@@ -10,3 +10,20 @@ packages/
 .editorconfig
 *.user
 Directory.Build.props
+
+# 本机兼容性及单双机回归：游戏程序集、反编译源码、隔离运行数据和临时工具，禁止提交。
+.compat-work/
+
+# 构建缓存与成品由构建脚本生成，避免提交旧 DLL、PCK 和压缩包。
+obj/
+artifacts/
+.build_mods/
+
+# 本机爬取的游戏日志数据库，不属于 Mod 源码。
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# 本机运行日志、诊断包及私有路径配置。
+*.log
+local.props

@@ -532,7 +532,7 @@ public sealed class CardService
         foreach (CardDisplayInfo info in selectedCards)
         {
             string displayName = string.IsNullOrEmpty(info.Name) ? info.IdText : info.Name;
-            bool ok = TryRemoveFromDeck(player, info);
+            bool ok = await TryRemoveFromDeck(player, info);
             if (ok)
             {
                 anyRemoved = true;
@@ -683,7 +683,7 @@ public sealed class CardService
     /// - 战斗中只动 run-scope 的 Deck pile：CardModel.Pile 实例的 Type 为 PileType.Deck 时才动；
     ///   不是的（异常情况，比如 caller 错传组合卡）直接拒绝并打日志。
     /// </summary>
-    private static bool TryRemoveFromDeck(Player player, CardDisplayInfo info)
+    private static async Task<bool> TryRemoveFromDeck(Player player, CardDisplayInfo info)
     {
         try
         {
@@ -704,7 +704,8 @@ public sealed class CardService
                 return false;
             }
 
-            card.RemoveFromCurrentPile();
+            // 原生命令同时处理删牌触发器、历史记录和已移除状态标记。
+            await CardPileCmd.RemoveFromDeck(card, showPreview: false);
             MainFile.Logger.Info($"卡片已从牌组移除 / Card removed from deck: {info.IdText}");
             return true;
         }
